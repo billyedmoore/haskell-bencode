@@ -58,8 +58,8 @@ library
     import:           warnings
 
     -- Modules exported by the library.
-    exposed-modules:  MyLib
-
+    exposed-modules:  
+                    Data.Bencode.Parse
     -- Modules included in this library but not exported.
     -- other-modules:
 
@@ -100,4 +100,6 @@ test-suite haskell-bencode-test
     -- Test dependencies.
     build-depends:
         base ^>=4.21.0.0,
+        tasty ^>= 1.5,
+        tasty-hunit ^>= 0.10,
         haskell-bencode
