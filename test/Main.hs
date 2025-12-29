@@ -1,4 +1,4 @@
-import Data.Bencode.Parse (BencodeValue (BencodeInt, BencodeString), parseInt, parseStr)
+import Data.Bencode.Parse (BencodeValue (BencodeInt, BencodeList, BencodeString), parseInt, parseList, parseStr)
 import Test.Tasty
 import Test.Tasty.HUnit
 
@@ -75,6 +75,38 @@ tests =
                 parseStr "" @?= Nothing,
               testCase "Missing length" $
                 parseStr ":abc" @?= Nothing
+            ]
+        ],
+      -- List tests
+      testGroup
+        "parseList Tests"
+        [ testGroup
+            "Successful Parsings"
+            [ testCase "Empty list" $
+                parseList "le" @?= Just (BencodeList [], ""),
+              testCase "List of integers" $
+                parseList "li1ei2ei3ee" @?= Just (BencodeList [BencodeInt 1, BencodeInt 2, BencodeInt 3], ""),
+              testCase "List of strings" $
+                parseList "l4:spam4:eggse" @?= Just (BencodeList [BencodeString "spam", BencodeString "eggs"], ""),
+              testCase "Mixed content (Int and String)" $
+                parseList "l4:spami42ee" @?= Just (BencodeList [BencodeString "spam", BencodeInt 42], ""),
+              testCase "Nested list" $
+                parseList "ll4:spamee" @?= Just (BencodeList [BencodeList [BencodeString "spam"]], ""),
+              testCase "List with remainder" $
+                parseList "leRest" @?= Just (BencodeList [], "Rest")
+            ],
+          testGroup
+            "Invalid Formats (Should return Nothing)"
+            [ testCase "Missing end 'e'" $
+                parseList "l4:spam" @?= Nothing,
+              testCase "Missing end 'e' (nested)" $
+                parseList "ll4:spame" @?= Nothing,
+              testCase "Junk inside list" $
+                parseList "l4:spamXa" @?= Nothing,
+              testCase "Only start char" $
+                parseList "l" @?= Nothing,
+              testCase "Empty input" $
+                parseList "" @?= Nothing
             ]
         ]
     ]
