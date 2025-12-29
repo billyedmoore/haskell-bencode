@@ -1,4 +1,4 @@
-import Data.Bencode.Parse (BencodeValue (BencodeInt, BencodeList, BencodeString), parseInt, parseList, parseStr)
+import Data.Bencode.Parse (BencodeValue (..), parseDict, parseInt, parseList, parseStr)
 import Test.Tasty
 import Test.Tasty.HUnit
 
@@ -8,6 +8,7 @@ main = defaultMain tests
 tests :: TestTree
 tests =
   testGroup
+    -- Tests for the element parsers, largely AI generated
     "Bencode Parser Tests"
     [ -- Integer Tests
       testGroup
@@ -107,6 +108,44 @@ tests =
                 parseList "l" @?= Nothing,
               testCase "Empty input" $
                 parseList "" @?= Nothing
+            ]
+        ],
+      -- Dictionary Tests
+      testGroup
+        "parseDict Tests"
+        [ testGroup
+            "Successful Parsings"
+            [ testCase "Empty dictionary" $
+                parseDict "de" @?= Just (BencodeDict [], ""),
+              testCase "Simple dictionary (one key)" $
+                parseDict "d3:cow3:mooe" @?= Just (BencodeDict [("cow", BencodeString "moo")], ""),
+              testCase "Multiple keys" $
+                parseDict "d3:cow3:moo4:spam4:eggse" @?= Just (BencodeDict [("cow", BencodeString "moo"), ("spam", BencodeString "eggs")], ""),
+              testCase "Nested dictionary" $
+                parseDict "d4:dictd3:foo3:baree" @?= Just (BencodeDict [("dict", BencodeDict [("foo", BencodeString "bar")])], ""),
+              testCase "Dictionary with list value" $
+                parseDict "d4:listli1ei2eee" @?= Just (BencodeDict [("list", BencodeList [BencodeInt 1, BencodeInt 2])], ""),
+              testCase "Dictionary with remainder" $
+                parseDict "deRest" @?= Just (BencodeDict [], "Rest")
+            ],
+          testGroup
+            "Invalid Formats (Should return Nothing)"
+            [ testCase "Missing end 'e'" $
+                parseDict "d3:cow3:moo" @?= Nothing,
+              testCase "Key not a string (integer key)" $
+                parseDict "di42e4:spame" @?= Nothing,
+              testCase "Duplicate keys" $
+                parseDict "d3:cow3:moo3:cow4:moo2e" @?= Nothing,
+              testCase "Missing value" $
+                parseDict "d3:cowe" @?= Nothing,
+              testCase "Odd number of elements" $
+                parseDict "d3:cow3:moo4:spame" @?= Nothing,
+              testCase "Unsorted keys" $
+                parseDict "d4:spam4:eggs3:cow3:mooe" @?= Nothing,
+              testCase "Only start char" $
+                parseDict "d" @?= Nothing,
+              testCase "Junk between key and value" $
+                parseDict "d3:cowX3:mooe" @?= Nothing
             ]
         ]
     ]
