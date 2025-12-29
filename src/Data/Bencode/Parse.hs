@@ -1,4 +1,4 @@
-module Data.Bencode.Parse (parse, parseInt, parseStr, BencodeValue (..)) where
+module Data.Bencode.Parse (parseInt, parseStr, parseList, BencodeValue (..)) where
 
 import Data.Bifunctor (first)
 import Data.Char (isNumber)
@@ -19,12 +19,22 @@ checkLeadingZeros ('0' : _) = ""
 checkLeadingZeros ('-' : xs) = '-' : checkLeadingZeros xs
 checkLeadingZeros s = s
 
-parse :: String -> Maybe BencodeValue
-parse ('i' : xs) = fmap fst (parseInt ('i' : xs))
-parse ('l' : _) = Just $ BencodeList [BencodeInt 1]
-parse ('d' : _) = Just $ BencodeMap [("key", BencodeString "value")]
-parse (x : xs) = Just $ BencodeString (x : xs)
-parse [] = Nothing
+parseElem :: String -> Maybe (BencodeValue, String)
+parseElem ('i' : xs) = parseInt ('i' : xs)
+parseElem ('l' : xs) = parseList ('l' : xs)
+parseElem ('d' : _) = Just (BencodeMap [("key", BencodeString "value")], "")
+parseElem (x : xs) = parseStr (x : xs)
+parseElem [] = Nothing
+
+parseList :: String -> Maybe (BencodeValue, String)
+parseList ('l' : str) = parseListInternal str []
+  where
+    parseListInternal :: String -> [BencodeValue] -> Maybe (BencodeValue, String)
+    parseListInternal ('e' : xs) acc = Just ((BencodeList . reverse) acc, xs)
+    parseListInternal s acc = case parseElem s of
+      Just (e, rest) -> parseListInternal rest (e : acc)
+      Nothing -> Nothing
+parseList _ = Nothing
 
 parseInt :: String -> Maybe (BencodeValue, String)
 parseInt ('i' : str) = fmap (first BencodeInt) (parseIntInternal str "")
@@ -45,12 +55,12 @@ parseStr s = case parseLength s "" of
         Nothing
       else Just ((BencodeString . take n) body, drop n body)
   Nothing -> Nothing
-
-parseLength :: String -> String -> Maybe (Int, String)
-parseLength (x : xs) acc
-  | x == ':' = case (readMaybe . checkLeadingZeros . reverse) acc of
-      Just n -> Just (n, xs)
-      Nothing -> Nothing
-  | isNumber x = parseLength xs (x : acc)
-  | otherwise = Nothing
-parseLength [] _ = Nothing
+  where
+    parseLength :: String -> String -> Maybe (Int, String)
+    parseLength (x : xs) acc
+      | x == ':' = case (readMaybe . checkLeadingZeros . reverse) acc of
+          Just n -> Just (n, xs)
+          Nothing -> Nothing
+      | isNumber x = parseLength xs (x : acc)
+      | otherwise = Nothing
+    parseLength [] _ = Nothing
