@@ -84,7 +84,8 @@ test-suite haskell-bencode-test
     default-language: GHC2024
 
     -- Modules included in this executable, other than Main.
-    -- other-modules:
+    other-modules:
+                    TestParse
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
