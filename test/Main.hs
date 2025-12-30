@@ -1,6 +1,7 @@
 module Main where
 
 import Test.Tasty
+import TestMarshall (marshallUnitTests)
 import TestParse (parseUnitTests)
 
 main :: IO ()
@@ -10,5 +11,6 @@ tests :: TestTree
 tests =
   testGroup
     "haskell-bencode Tests"
-    [ parseUnitTests
+    [ parseUnitTests,
+      marshallUnitTests
     ]

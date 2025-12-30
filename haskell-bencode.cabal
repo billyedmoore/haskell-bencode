@@ -60,6 +60,7 @@ library
     -- Modules exported by the library.
     exposed-modules:  
                     Data.Bencode.Parse
+                    Data.Bencode.Marshall
                     Data.Bencode.Types
     -- Modules included in this library but not exported.
     -- other-modules:
@@ -86,7 +87,7 @@ test-suite haskell-bencode-test
     -- Modules included in this executable, other than Main.
     other-modules:
                     TestParse
-
+                    TestMarshall
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
 
