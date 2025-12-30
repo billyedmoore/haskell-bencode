@@ -1,4 +1,5 @@
-import Data.Bencode.Parse (BencodeValue (..), parseDict, parseInt, parseList, parseStr)
+import Data.Bencode.Parse (parseDict, parseInt, parseList, parseStr)
+import Data.Bencode.Types (BencodeValue (..))
 import Test.Tasty
 import Test.Tasty.HUnit
 

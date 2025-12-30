@@ -1,16 +1,10 @@
-module Data.Bencode.Parse (parseInt, parseStr, parseList, parseDict, BencodeValue (..)) where
+module Data.Bencode.Parse (parseInt, parseStr, parseList, parseDict) where
 
 import Control.Monad (guard)
+import Data.Bencode.Types (BencodeValue (..))
 import Data.Bifunctor (first)
 import Data.Char (isNumber)
 import Text.Read (readMaybe)
-
-data BencodeValue
-  = BencodeString String
-  | BencodeInt Int
-  | BencodeList [BencodeValue]
-  | BencodeDict [(String, BencodeValue)]
-  deriving (Eq, Show)
 
 -- Return True if s has leading zero otherwise return s
 isValidBencodeInt :: String -> Bool
