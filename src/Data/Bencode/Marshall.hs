@@ -1,13 +1,13 @@
-module Data.Bencode.Marshall (marshallString, marshallInt, marshallElem) where
+module Data.Bencode.Marshall (marshallString, marshallInt, marshall) where
 
 import Data.Bencode.Types (BencodeValue (..))
 import Data.List (sortOn)
 
-marshallElem :: BencodeValue -> Maybe String
-marshallElem (BencodeString s) = Just $ marshallString s
-marshallElem (BencodeInt i) = Just $ marshallInt i
-marshallElem (BencodeDict d) = marshallDict d
-marshallElem (BencodeList l) = marshallList l
+marshall :: BencodeValue -> Maybe String
+marshall (BencodeString s) = Just $ marshallString s
+marshall (BencodeInt i) = Just $ marshallInt i
+marshall (BencodeDict d) = marshallDict d
+marshall (BencodeList l) = marshallList l
 
 marshallString :: String -> String
 marshallString s = show (length s) ++ (':' : s)
@@ -17,7 +17,7 @@ marshallInt i = "i" ++ show i ++ "e"
 
 marshallList :: [BencodeValue] -> Maybe String
 marshallList l = do
-  marshalledElems <- traverse marshallElem l
+  marshalledElems <- traverse marshall l
   return ("l" ++ concat marshalledElems ++ "e")
 
 marshallDict :: [(String, BencodeValue)] -> Maybe String
@@ -29,5 +29,5 @@ marshallDict d = do
     marshallPair :: (String, BencodeValue) -> Maybe String
     marshallPair (k, v) = do
       let marshalledK = marshallString k
-      marshalledV <- marshallElem v
+      marshalledV <- marshall v
       return (marshalledK ++ marshalledV)

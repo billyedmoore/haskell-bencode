@@ -1,4 +1,4 @@
-module Data.Bencode.Parse (parseInt, parseStr, parseList, parseDict) where
+module Data.Bencode.Parse (parseInt, parseStr, parseList, parseDict, parse) where
 
 import Control.Monad (guard)
 import Data.Bencode.Types (BencodeValue (..))
@@ -20,6 +20,12 @@ readMaybeBencodeInt s =
   if isValidBencodeInt s
     then Nothing
     else readMaybe s
+
+parse :: String -> Maybe BencodeValue
+parse s = do
+  (v, r) <- parseElem s
+  guard (r == "")
+  return v
 
 parseElem :: String -> Maybe (BencodeValue, String)
 parseElem ('i' : xs) = parseInt ('i' : xs)
