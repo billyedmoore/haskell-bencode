@@ -12,13 +12,20 @@ data BencodeValue
   | BencodeDict [(String, BencodeValue)]
   deriving (Eq, Show)
 
--- Return "" if s has leading zero otherwise return s
-checkLeadingZeros :: String -> String
-checkLeadingZeros "0" = "0" -- Special case for 0 allowed to start with 0
-checkLeadingZeros "-0" = "" -- Special case for -0 not allowed
-checkLeadingZeros ('0' : _) = ""
-checkLeadingZeros ('-' : xs) = '-' : checkLeadingZeros xs
-checkLeadingZeros s = s
+-- Return True if s has leading zero otherwise return s
+isValidBencodeInt :: String -> Bool
+isValidBencodeInt "0" = False -- Special case for 0 allowed to start with 0
+isValidBencodeInt "-0" = True -- Special case for -0 not allowed
+isValidBencodeInt ('0' : _) = True
+isValidBencodeInt ('-' : xs) = isValidBencodeInt xs
+isValidBencodeInt _ = False
+
+-- Read an int and ensure no leading zeros
+readMaybeBencodeInt :: String -> Maybe Int
+readMaybeBencodeInt s =
+  if isValidBencodeInt s
+    then Nothing
+    else readMaybe s
 
 parseElem :: String -> Maybe (BencodeValue, String)
 parseElem ('i' : xs) = parseInt ('i' : xs)
@@ -70,7 +77,7 @@ parseInt ('i' : str) = fmap (first BencodeInt) (parseIntInternal str "")
   where
     parseIntInternal :: String -> String -> Maybe (Int, String)
     parseIntInternal ('e' : xs) acc = do
-      n <- (readMaybe . checkLeadingZeros . reverse) acc
+      n <- readMaybeBencodeInt (reverse acc)
       return (n, xs)
     parseIntInternal (x : xs) acc = parseIntInternal xs (x : acc)
     parseIntInternal [] _ = Nothing
@@ -86,7 +93,7 @@ parseStr s = do
     parseLength :: String -> String -> Maybe (Int, String)
     parseLength (x : xs) acc
       | x == ':' = do
-          n <- (readMaybe . checkLeadingZeros . reverse) acc
+          n <- readMaybeBencodeInt (reverse acc)
           return (n, xs)
       | isNumber x = parseLength xs (x : acc)
       | otherwise = Nothing
